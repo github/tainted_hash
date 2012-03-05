@@ -32,6 +32,16 @@ class TaintedHash
     end
   end
 
+  # Public: Gets the value for the key, and approves the key for the Hash.
+  #
+  # key - A String key to retrieve.
+  #
+  # Returns the value of at the key in Hash.
+  def [](key)
+    approve key
+    @hash[key.to_s]
+  end
+
   # Public: Checks whether the given key has been approved or not.
   #
   # key - A String key.
@@ -49,7 +59,7 @@ class TaintedHash
   #
   # Returns an Array of the values (or nil if there is no value) for the keys.
   def values_at(*keys)
-    approve *keys
+    keys = approve *keys
     @hash.values_at *keys
   end
 

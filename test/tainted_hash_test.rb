@@ -3,18 +3,18 @@ require 'test/unit'
 
 class TaintedHashTest < Test::Unit::TestCase
   def setup
-    @hash = {:a => 1, :b => 2, :c => 3}
+    @hash = {'a' => 1, 'b' => 2, 'c' => 3}
     @tainted = TaintedHash.new @hash
   end
 
   def test_exposes_no_keys_by_default
-    assert !@tainted.include?(:a)
-    assert !@tainted.include?(:b)
+    assert !@tainted.include?('a')
+    assert !@tainted.include?('b')
     assert_equal [], @tainted.keys
 
-    assert @hash.include?(:a)
-    assert @hash.include?(:b)
-    assert @hash.include?(:c)
+    assert @hash.include?('a')
+    assert @hash.include?('b')
+    assert @hash.include?('c')
   end
 
   def test_approve_keys
@@ -23,6 +23,12 @@ class TaintedHashTest < Test::Unit::TestCase
     @tainted.approve :a
     assert @tainted.include?(:a)
     assert_equal %w(a), @tainted.keys
+  end
+
+  def test_fetching_a_value
+    assert !@tainted.include?(:a)
+    assert_equal 1, @tainted[:a]
+    assert @tainted.include?(:a)
   end
 
   def test_does_not_approve_missing_keys
