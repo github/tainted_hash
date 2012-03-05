@@ -25,13 +25,23 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal [:a], @tainted.keys
   end
 
+  def test_does_not_approve_missing_keys
+    assert !@tainted.include?(:a)
+    assert !@tainted.include?(:d)
+    @tainted.approve :a, :d
+    assert @tainted.include?(:a)
+    assert !@tainted.include?(:d)
+  end
+
   def test_values_at_approves_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:b)
+    assert !@tainted.include?(:d)
 
-    assert_equal [1,2], @tainted.values_at(:a, :b)
+    assert_equal [1,2, nil], @tainted.values_at(:a, :b, :d)
     assert @tainted.include?(:a)
     assert @tainted.include?(:b)
+    assert !@tainted.include?(:d)
   end
 end
 

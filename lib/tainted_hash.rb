@@ -15,6 +15,7 @@ class TaintedHash
   # hash - Optional Hash used internally.
   def initialize(hash = nil)
     @hash = (hash || {}).freeze
+    @available = Set.new @hash.keys
     @approved = Set.new
   end
 
@@ -24,7 +25,7 @@ class TaintedHash
   #
   # Returns the Set of unique approved keys.
   def approve(*keys)
-    @approved.merge keys
+    @approved.merge(@available.intersection(keys))
   end
 
   # Public: Checks whether the given key has been approved or not.
