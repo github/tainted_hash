@@ -42,6 +42,16 @@ class TaintedHash
     @hash[key.to_s]
   end
 
+  # Public: Attempts to set the key of a frozen hash.
+  #
+  # key   - String key to set.
+  # value - Value of the key.
+  #
+  # Returns nothing
+  def []=(key, value)
+    raise ArgumentError, "Cannot modify tainted hash"
+  end
+
   # Public: Checks whether the given key has been approved or not.
   #
   # key - A String key.

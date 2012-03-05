@@ -31,6 +31,12 @@ class TaintedHashTest < Test::Unit::TestCase
     assert @tainted.include?(:a)
   end
 
+  def test_setting_a_value
+    assert_raises ArgumentError do
+      @tainted[:a] = 1
+    end
+  end
+
   def test_does_not_approve_missing_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
