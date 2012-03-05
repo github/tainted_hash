@@ -31,6 +31,17 @@ class TaintedHash
       key_s
     end
   end
+  
+  # Public: Fetches the value in the hash at key, or a sensible default.
+  #
+  # key     - A String key to retrieve.
+  # default - A sensible default.
+  #
+  # Returns the value of the key, or the default.
+  def fetch(key, default = nil)
+    approve key
+    @hash.fetch key.to_s, default
+  end
 
   # Public: Gets the value for the key, and approves the key for the Hash.
   #

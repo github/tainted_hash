@@ -27,6 +27,15 @@ class TaintedHashTest < Test::Unit::TestCase
 
   def test_fetching_a_value
     assert !@tainted.include?(:a)
+    assert !@tainted.include?(:d)
+    assert_equal 1, @tainted.fetch(:a, :default)
+    assert_equal :default, @tainted.fetch(:d, :default)
+    assert @tainted.include?(:a)
+    assert !@tainted.include?(:d)
+  end
+
+  def test_getting_a_value
+    assert !@tainted.include?(:a)
     assert_equal 1, @tainted[:a]
     assert @tainted.include?(:a)
   end
