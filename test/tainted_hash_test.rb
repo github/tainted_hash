@@ -22,7 +22,7 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal [], @tainted.keys
     @tainted.approve :a
     assert @tainted.include?(:a)
-    assert_equal [:a], @tainted.keys
+    assert_equal %w(a), @tainted.keys
   end
 
   def test_does_not_approve_missing_keys

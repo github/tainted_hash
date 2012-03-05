@@ -15,33 +15,37 @@ class TaintedHash
   # hash - Optional Hash used internally.
   def initialize(hash = nil)
     @hash = (hash || {}).freeze
-    @available = Set.new @hash.keys
+    @available = Set.new @hash.keys.map { |k| k.to_s }
     @approved = Set.new
   end
 
   # Public: Approves one or more keys for the hash.
   #
-  # *keys - One or more String/Symbol keys.
+  # *keys - One or more String keys.
   #
-  # Returns the Set of unique approved keys.
+  # Returns nothing.
   def approve(*keys)
-    @approved.merge(@available.intersection(keys))
+    keys.map! do |key|
+      key_s = key.to_s
+      @approved << key_s if @available.include?(key_s)
+      key_s
+    end
   end
 
   # Public: Checks whether the given key has been approved or not.
   #
-  # key - A String or Symbol key.
+  # key - A String key.
   #
   # Returns true if approved, or false.
   def include?(key)
-    @approved.include? key
+    @approved.include? key.to_s
   end
 
   alias key? include?
 
   # Public: Returns the values for the given keys, and approves the keys.
   #
-  # *keys - One or more String/Symbol keys.
+  # *keys - One or more String keys.
   #
   # Returns an Array of the values (or nil if there is no value) for the keys.
   def values_at(*keys)
@@ -51,7 +55,7 @@ class TaintedHash
 
   # Public: Enumerates through the approved keys and valuesfor the hash.
   #
-  # Yields the String/Symbol key, and the value.
+  # Yields the String key, and the value.
   #
   # Returns nothing.
   def each
@@ -62,7 +66,7 @@ class TaintedHash
 
   # Public: Returns a list of the currently approved keys.
   #
-  # Returns an Array of String/Symbol keys.
+  # Returns an Array of String keys.
   def keys
     @approved.to_a
   end
