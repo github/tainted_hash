@@ -3,7 +3,7 @@ require 'test/unit'
 
 class TaintedHashTest < Test::Unit::TestCase
   def setup
-    @hash = {'a' => 1, 'b' => 2, 'c' => 3}
+    @hash = {'a' => 1, 'b' => 2, 'c' => {'name' => 'bob'}}
     @tainted = TaintedHash.new @hash
   end
 
@@ -65,6 +65,31 @@ class TaintedHashTest < Test::Unit::TestCase
     assert @tainted.include?(:a)
     assert @tainted.include?(:b)
     assert !@tainted.include?(:c)
+  end
+
+  def test_nested_hash_has_tainted_hashes
+    assert_kind_of TaintedHash, @tainted[:c]
+    assert_equal 'bob', @tainted[:c][:name]
+  end
+
+  def test_slicing_nested_hashes
+    slice = @tainted.slice :b, :c
+    assert_equal 2, slice[:b]
+    assert_equal 'bob', slice[:c][:name]
+    assert_equal %w(b c), slice.keys.sort
+    assert_equal %w(name), slice[:c].keys
+  end
+
+  def test_slicing_and_building_hashes
+    hash = {'desc' => 'abc', 'files' => {'abc.txt' => 'abc'}}
+    tainted = TaintedHash.new hash
+
+    slice = tainted.slice :desc
+    assert_equal({'desc' => 'abc'}, slice.hash)
+    assert slice.include?(:desc)
+    slice[:contents] = tainted[:files].approve_all
+    assert slice[:contents].include?('abc.txt')
+    assert_equal 'abc', slice[:contents]['abc.txt']
   end
 
   def test_update_hash

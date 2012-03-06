@@ -63,7 +63,8 @@ class TaintedHash < Hash
     approve key
     case value = @hash[key.to_s]
     when TaintedHash then value
-    when Hash then self.class.new(value, nil, nil, @new_class)
+    when Hash
+      @hash[key.to_s] = self.class.new(value, nil, nil, @new_class)
     else value
     end
   end
@@ -78,7 +79,11 @@ class TaintedHash < Hash
     key_s = key.to_s
     @available << key_s
     approve key_s
-    @hash[key_s] = value
+    @hash[key_s] = case value
+    when TaintedHash then value
+    when Hash then self.class.new(value, nil, nil, @new_class)
+    else value
+    end
   end
 
   def delete(key)
@@ -129,6 +134,10 @@ class TaintedHash < Hash
 
   alias stringify_keys! stringify_keys
 
+  def merge(hash)
+    dup.update(hash)
+  end
+
   def update(hash)
     hash.each do |key, value|
       self[key] = value
@@ -136,7 +145,6 @@ class TaintedHash < Hash
     self
   end
 
-  alias merge update
   alias merge! update
 
   # Public: Enumerates through the approved keys and valuesfor the hash.
