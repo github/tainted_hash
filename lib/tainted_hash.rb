@@ -20,8 +20,8 @@ class TaintedHash < Hash
     @new_class = new_class || Hash
   end
 
-  def dup
-    self.class.new(@hash.dup, @approved, @available, @new_class)
+  def dup(approved = nil, available = nil)
+    self.class.new(@hash.dup, approved || @approved, available || @available, @new_class)
   end
 
   # Public: Approves one or more keys for the hash.
@@ -123,10 +123,12 @@ class TaintedHash < Hash
   def slice(*keys)
     str_keys = keys.map { |k| k.to_s }
     approve *str_keys
-    self.class.new(to_hash, @approved, Set.new(str_keys), @new_class)
+    dup(nil, Set.new(str_keys)).approve *str_keys
   end
 
-  alias slice! slice
+  def slice!(*keys)
+    raise NotImplementedError
+  end
 
   def stringify_keys
     self

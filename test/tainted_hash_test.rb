@@ -84,9 +84,14 @@ class TaintedHashTest < Test::Unit::TestCase
     hash = {'desc' => 'abc', 'files' => {'abc.txt' => 'abc'}}
     tainted = TaintedHash.new hash
 
+    tainted.approve :desc, :files
+    assert tainted.include?(:desc)
+    assert tainted.include?(:files)
+
     slice = tainted.slice :desc
-    assert_equal({'desc' => 'abc'}, slice.hash)
     assert slice.include?(:desc)
+    assert !slice.include?(:files)
+    assert_equal %w(desc), slice.keys
     slice[:contents] = tainted[:files].approve_all
     assert slice[:contents].include?('abc.txt')
     assert_equal 'abc', slice[:contents]['abc.txt']
