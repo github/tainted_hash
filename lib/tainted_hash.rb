@@ -123,7 +123,11 @@ class TaintedHash < Hash
   def slice(*keys)
     str_keys = keys.map { |k| k.to_s }
     approve *str_keys
-    dup(nil, Set.new(str_keys)).approve *str_keys
+    hash = self.class.new
+    str_keys.each do |key|
+      hash[key] = self[key]
+    end
+    hash
   end
 
   def slice!(*keys)
@@ -163,7 +167,12 @@ class TaintedHash < Hash
 
   def to_hash
     hash = @new_class.new
-    each { |key, value| hash[key] = value }
+    each do |key, value| 
+      hash[key] = case value
+        when TaintedHash then value.to_hash
+        else value
+        end
+    end
     hash
   end
 
@@ -177,6 +186,14 @@ class TaintedHash < Hash
 
   def to_query
     @hash.to_query
+  end
+
+  def to_a
+    to_hash.to_a
+  end
+
+  def values
+    keys.map { |k| self[k] }
   end
 
   # Public: Returns a list of the currently approved keys.
