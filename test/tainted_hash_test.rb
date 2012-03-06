@@ -66,6 +66,16 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:c)
   end
 
+  def test_update_hash
+    assert !@tainted.include?(:a)
+    assert !@tainted.include?(:d)
+    @tainted.update :a => 2, :d => 1
+    assert @tainted.include?(:a)
+    assert @tainted.include?(:d)
+    assert_equal 2, @tainted[:a]
+    assert_equal 1, @tainted[:d]
+  end
+
   def test_does_not_approve_missing_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)

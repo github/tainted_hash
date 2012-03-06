@@ -67,6 +67,7 @@ class TaintedHash
   def delete(key)
     key_s = key.to_s
     @approved.delete key_s
+    @available.delete key_s
     @hash.delete key_s
   end
 
@@ -101,6 +102,19 @@ class TaintedHash
   end
 
   alias slice! slice
+
+  def update(hash)
+    hash.each do |key, value|
+      key_s = key.to_s
+      @hash[key_s] = value
+      @available << key_s
+      approve key_s
+    end
+    self
+  end
+
+  alias merge update
+  alias merge! update
 
   # Public: Enumerates through the approved keys and valuesfor the hash.
   #
