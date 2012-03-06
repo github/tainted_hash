@@ -6,7 +6,7 @@ if Object.const_defined?(:Rails)
     class ActionController::Request
       alias rails_parameters parameters
       def parameters
-        @parameters ||= TaintedHash.new(rails_parameters)
+        @parameters ||= TaintedHash.new(rails_parameters, nil, nil, HashWithIndifferentAccess)
       end
     end
   end
