@@ -167,6 +167,14 @@ class TaintedHash < Hash
     hash
   end
 
+  def blank?
+    @approved.blank?
+  end
+
+  def present?
+    @approved.present?
+  end
+
   def to_query
     @hash.to_query
   end
