@@ -64,6 +64,12 @@ class TaintedHash
     @hash[key.to_s] = value
   end
 
+  def delete(key)
+    key_s = key.to_s
+    @approved.delete key_s
+    @hash.delete key_s
+  end
+
   # Public: Checks whether the given key has been approved or not.
   #
   # key - A String key.

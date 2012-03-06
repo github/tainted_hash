@@ -47,6 +47,13 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal 2, @tainted[:a]
   end
 
+  def test_deleting_a_value
+    assert_equal 1, @tainted[:a]
+    assert @tainted.include?(:a)
+    assert_equal 1, @tainted.delete(:a)
+    assert !@tainted.include?(:a)
+  end
+
   def test_slicing_a_hash
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:b)
