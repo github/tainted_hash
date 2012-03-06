@@ -84,6 +84,17 @@ class TaintedHash
     @hash.values_at *keys
   end
 
+  # Public: Returns a portion of the Hash.
+  #
+  # *keys - One or more String keys.
+  #
+  # Returns a Hash of the requested keys and values.
+  def slice(*keys)
+    approve(*keys).inject({}) { |hash, k| hash.update(k => self[k]) }
+  end
+
+  alias slice! slice
+
   # Public: Enumerates through the approved keys and valuesfor the hash.
   #
   # Yields the String key, and the value.

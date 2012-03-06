@@ -46,6 +46,18 @@ class TaintedHashTest < Test::Unit::TestCase
     end
   end
 
+  def test_slicing_a_hash
+    assert !@tainted.include?(:a)
+    assert !@tainted.include?(:b)
+    assert !@tainted.include?(:c)
+
+    assert_equal({'a' => 1, 'b' => 2}, @tainted.slice(:a, :b))
+
+    assert @tainted.include?(:a)
+    assert @tainted.include?(:b)
+    assert !@tainted.include?(:c)
+  end
+
   def test_does_not_approve_missing_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
