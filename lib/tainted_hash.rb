@@ -134,6 +134,10 @@ class TaintedHash < Hash
     hash
   end
 
+  def to_query
+    @hash.to_query
+  end
+
   # Public: Returns a list of the currently approved keys.
   #
   # Returns an Array of String keys.
