@@ -13,10 +13,15 @@ class TaintedHash < Hash
   # created, the internal Hash is frozen from future updates.
   #
   # hash - Optional Hash used internally.
-  def initialize(hash = nil)
+  def initialize(hash = nil, approved = nil, available = nil, new_class = nil)
     @hash = hash || {}
-    @available = Set.new @hash.keys.map { |k| k.to_s }
-    @approved = Set.new
+    @available = available || Set.new(@hash.keys.map { |k| k.to_s })
+    @approved = approved ? approved.intersection(@available) : Set.new
+    @new_class = new_class || Hash
+  end
+
+  def dup
+    self.class.new(@hash.dup, @approved, @available, @new_class)
   end
 
   # Public: Approves one or more keys for the hash.
@@ -25,11 +30,17 @@ class TaintedHash < Hash
   #
   # Returns nothing.
   def approve(*keys)
-    keys.map! do |key|
+    keys.each do |key|
       key_s = key.to_s
       @approved << key_s if @available.include?(key_s)
       key_s
     end
+    self
+  end
+
+  def approve_all
+    @approved = @available
+    self
   end
   
   # Public: Fetches the value in the hash at key, or a sensible default.
@@ -50,7 +61,11 @@ class TaintedHash < Hash
   # Returns the value of at the key in Hash.
   def [](key)
     approve key
-    @hash[key.to_s]
+    case value = @hash[key.to_s]
+    when TaintedHash then value
+    when Hash then self.class.new(value, nil, nil, @new_class)
+    else value
+    end
   end
 
   # Public: Attempts to set the key of a frozen hash.
@@ -60,8 +75,10 @@ class TaintedHash < Hash
   #
   # Returns nothing
   def []=(key, value)
-    approve key
-    @hash[key.to_s] = value
+    key_s = key.to_s
+    @available << key_s
+    approve key_s
+    @hash[key_s] = value
   end
 
   def delete(key)
@@ -88,8 +105,9 @@ class TaintedHash < Hash
   #
   # Returns an Array of the values (or nil if there is no value) for the keys.
   def values_at(*keys)
-    keys = approve *keys
-    @hash.values_at *keys
+    str_keys = keys.map { |k| k.to_s }
+    approve *str_keys
+    @hash.values_at *str_keys
   end
 
   # Public: Returns a portion of the Hash.
@@ -98,18 +116,22 @@ class TaintedHash < Hash
   #
   # Returns a Hash of the requested keys and values.
   def slice(*keys)
-    approve *keys
-    to_hash
+    str_keys = keys.map { |k| k.to_s }
+    approve *str_keys
+    self.class.new(to_hash, @approved, Set.new(str_keys), @new_class)
   end
 
   alias slice! slice
 
+  def stringify_keys
+    self
+  end
+
+  alias stringify_keys! stringify_keys
+
   def update(hash)
     hash.each do |key, value|
-      key_s = key.to_s
-      @hash[key_s] = value
-      @available << key_s
-      approve key_s
+      self[key] = value
     end
     self
   end
@@ -123,13 +145,14 @@ class TaintedHash < Hash
   #
   # Returns nothing.
   def each
+    raise "Nothing is approved" if @approved.size.zero? && @available.size > 0
     @approved.each do |key|
       yield key, @hash[key]
     end
   end
 
   def to_hash
-    hash = HashWithIndifferentAccess.new
+    hash = @new_class.new
     each { |key, value| hash[key] = value }
     hash
   end
@@ -143,6 +166,10 @@ class TaintedHash < Hash
   # Returns an Array of String keys.
   def keys
     @approved.to_a
+  end
+
+  def inspect
+    %(#<#{self.class}:#{object_id} @hash=#{@hash.inspect} @approved=#{@approved.to_a.inspect}>)
   end
 end
   

@@ -59,7 +59,8 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:b)
     assert !@tainted.include?(:c)
 
-    assert_equal({'a' => 1, 'b' => 2}, @tainted.slice(:a, :b))
+    output = @tainted.slice(:a, :b)
+    assert_equal({'a' => 1, 'b' => 2}, output.to_hash)
 
     assert @tainted.include?(:a)
     assert @tainted.include?(:b)
@@ -88,7 +89,6 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:b)
     assert !@tainted.include?(:d)
-
     assert_equal [1,2, nil], @tainted.values_at(:a, :b, :d)
     assert @tainted.include?(:a)
     assert @tainted.include?(:b)
