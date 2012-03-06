@@ -98,7 +98,8 @@ class TaintedHash < Hash
   #
   # Returns a Hash of the requested keys and values.
   def slice(*keys)
-    approve(*keys).inject({}) { |hash, k| hash.update(k => self[k]) }
+    approve *keys
+    to_hash
   end
 
   alias slice! slice
@@ -125,6 +126,12 @@ class TaintedHash < Hash
     @approved.each do |key|
       yield key, @hash[key]
     end
+  end
+
+  def to_hash
+    hash = HashWithIndifferentAccess.new
+    each { |key, value| hash[key] = value }
+    hash
   end
 
   # Public: Returns a list of the currently approved keys.
