@@ -12,9 +12,9 @@ Gem::Specification.new do |s|
   ## If your rubyforge_project name is different, then edit it and comment out
   ## the sub! line in the Rakefile
   s.name              = 'tainted_hash'
-  s.version           = '0.7.5'
-  s.date              = '2011-10-04'
-  s.rubyforge_project = 'faraday'
+  s.version           = '0.0.1'
+  s.date              = '2012-03-05'
+  s.rubyforge_project = 'tainted_hash'
 
   ## Make sure your summary is short. The description may be as long
   ## as you like.
@@ -39,45 +39,12 @@ Gem::Specification.new do |s|
   ## THE MANIFEST COMMENTS, they are used as delimiters by the task.
   # = MANIFEST =
   s.files = %w[
-    Gemfile
     LICENSE.md
     README.md
     Rakefile
-    config.ru
-    faraday.gemspec
-    lib/faraday.rb
-    lib/faraday/adapter.rb
-    lib/faraday/adapter/action_dispatch.rb
-    lib/faraday/adapter/em_synchrony.rb
-    lib/faraday/adapter/excon.rb
-    lib/faraday/adapter/net_http.rb
-    lib/faraday/adapter/patron.rb
-    lib/faraday/adapter/test.rb
-    lib/faraday/adapter/typhoeus.rb
-    lib/faraday/builder.rb
-    lib/faraday/connection.rb
-    lib/faraday/error.rb
-    lib/faraday/middleware.rb
-    lib/faraday/request.rb
-    lib/faraday/request/json.rb
-    lib/faraday/request/multipart.rb
-    lib/faraday/request/url_encoded.rb
-    lib/faraday/response.rb
-    lib/faraday/response/logger.rb
-    lib/faraday/response/raise_error.rb
-    lib/faraday/upload_io.rb
-    lib/faraday/utils.rb
-    test/adapters/live_test.rb
-    test/adapters/logger_test.rb
-    test/adapters/net_http_test.rb
-    test/adapters/test_middleware_test.rb
-    test/connection_test.rb
-    test/env_test.rb
-    test/helper.rb
-    test/live_server.rb
-    test/middleware_stack_test.rb
-    test/request_middleware_test.rb
-    test/response_middleware_test.rb
+    lib/tainted_hash.rb
+    tainted_hash.gemspec
+    test/tainted_hash_test.rb
   ]
   # = MANIFEST =
 
