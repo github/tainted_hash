@@ -1,6 +1,6 @@
 require 'set'
 
-class TaintedHash
+class TaintedHash < Hash
   VERSION = "0.0.1"
 
   # Public: Gets the original hash that is being wrapped.
