@@ -41,9 +41,10 @@ class TaintedHashTest < Test::Unit::TestCase
   end
 
   def test_setting_a_value
-    assert_raises ArgumentError do
-      @tainted[:a] = 1
-    end
+    assert !@tainted.include?(:a)
+    @tainted[:a] = 2
+    assert @tainted.include?(:a)
+    assert_equal 2, @tainted[:a]
   end
 
   def test_slicing_a_hash

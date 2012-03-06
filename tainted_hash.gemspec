@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   ## the sub! line in the Rakefile
   s.name              = 'tainted_hash'
   s.version           = '0.0.1'
-  s.date              = '2012-03-05'
+  s.date              = '2012-03-06'
   s.rubyforge_project = 'tainted_hash'
 
   ## Make sure your summary is short. The description may be as long
@@ -42,7 +42,9 @@ Gem::Specification.new do |s|
     LICENSE.md
     README.md
     Rakefile
+    lib/rails_init.rb
     lib/tainted_hash.rb
+    lib/tainted_hash/rails.rb
     tainted_hash.gemspec
     test/tainted_hash_test.rb
   ]

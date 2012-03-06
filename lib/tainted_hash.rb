@@ -14,7 +14,7 @@ class TaintedHash
   #
   # hash - Optional Hash used internally.
   def initialize(hash = nil)
-    @hash = (hash || {}).freeze
+    @hash = hash || {}
     @available = Set.new @hash.keys.map { |k| k.to_s }
     @approved = Set.new
   end
@@ -60,7 +60,8 @@ class TaintedHash
   #
   # Returns nothing
   def []=(key, value)
-    raise ArgumentError, "Cannot modify tainted hash"
+    approve key
+    @hash[key.to_s] = value
   end
 
   # Public: Checks whether the given key has been approved or not.
