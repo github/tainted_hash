@@ -2,9 +2,9 @@
 
 A TaintedHash is a wrapper around a normal Hash that only exposes the keys that
 have been approved.  This is useful in cases where a Hash is built from user
-input.  By forcing the developer to approve keys, no unexpected keys are passed
-to data stores.  Because of this specific use case, it is assumed all keys are
-strings.
+input from an external service (such as Rails or Sinatra).  By forcing the 
+developer to approve keys, no unexpected keys are passed to data stores.  
+Because of this specific use case, it is assumed all keys are strings.
 
 By default, no keys have been approved.
 
