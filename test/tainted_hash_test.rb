@@ -124,5 +124,16 @@ class TaintedHashTest < Test::Unit::TestCase
     assert @tainted.include?(:b)
     assert !@tainted.include?(:d)
   end
+
+  def test_requires_something_to_be_approved
+    assert_raises RuntimeError do
+      @tainted.to_hash
+    end
+
+    @tainted.approve :missing
+    assert_equal({}, @tainted.to_hash)
+    @tainted.approve :a
+    assert_equal({'a' => 1}, @tainted.to_hash)
+  end
 end
 

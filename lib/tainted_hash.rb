@@ -18,6 +18,7 @@ class TaintedHash < Hash
     @available = available || Set.new(@hash.keys.map { |k| k.to_s })
     @approved = approved ? approved.intersection(@available) : Set.new
     @new_class = new_class || Hash
+    @approved_nothing = @approved.size.zero?
   end
 
   def dup(approved = nil, available = nil)
@@ -30,6 +31,7 @@ class TaintedHash < Hash
   #
   # Returns nothing.
   def approve(*keys)
+    @approved_nothing = false
     keys.each do |key|
       key_s = key.to_s
       @approved << key_s if @available.include?(key_s)
@@ -40,6 +42,7 @@ class TaintedHash < Hash
 
   def approve_all
     @approved = @available
+    @approved_nothing = false
     self
   end
   
@@ -159,7 +162,7 @@ class TaintedHash < Hash
   #
   # Returns nothing.
   def each
-    raise "Nothing is approved" if @approved.size.zero? && @available.size > 0
+    raise "Nothing is approved" if @approved_nothing && @available.size > 0
     @approved.each do |key|
       yield key, @hash[key]
     end
