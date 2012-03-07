@@ -123,31 +123,6 @@ class TaintedHash < Hash
     @hash.values_at *str_keys
   end
 
-  # Public: Returns a portion of the Hash.
-  #
-  # *keys - One or more String keys.
-  #
-  # Returns a Hash of the requested keys and values.
-  def slice(*keys)
-    str_keys = keys.map { |k| k.to_s }
-    approve *str_keys
-    hash = self.class.new
-    str_keys.each do |key|
-      hash[key] = self[key]
-    end
-    hash
-  end
-
-  def slice!(*keys)
-    raise NotImplementedError
-  end
-
-  def stringify_keys
-    self
-  end
-
-  alias stringify_keys! stringify_keys
-
   def merge(hash)
     dup.update(hash)
   end
@@ -184,18 +159,6 @@ class TaintedHash < Hash
     hash
   end
 
-  def blank?
-    @approved.blank?
-  end
-
-  def present?
-    @approved.present?
-  end
-
-  def to_query
-    @hash.to_query
-  end
-
   def to_a
     to_hash.to_a
   end
@@ -213,6 +176,47 @@ class TaintedHash < Hash
 
   def inspect
     %(#<#{self.class}:#{object_id} @hash=#{@hash.inspect} @approved=#{@approved.to_a.inspect}>)
+  end
+
+  module RailsMethods
+    def self.included(base)
+      base.send :alias_method, :stringify_keys!, :stringify_keys
+    end
+
+    # Public: Returns a portion of the Hash.
+    #
+    # *keys - One or more String keys.
+    #
+    # Returns a Hash of the requested keys and values.
+    def slice(*keys)
+      str_keys = keys.map { |k| k.to_s }
+      approve *str_keys
+      hash = self.class.new
+      str_keys.each do |key|
+        hash[key] = self[key]
+      end
+      hash
+    end
+
+    def slice!(*keys)
+      raise NotImplementedError
+    end
+
+    def stringify_keys
+      self
+    end
+
+    def blank?
+      @approved.blank?
+    end
+
+    def present?
+      @approved.present?
+    end
+
+    def to_query
+      @hash.to_query
+    end
   end
 end
   

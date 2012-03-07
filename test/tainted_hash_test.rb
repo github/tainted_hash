@@ -1,6 +1,8 @@
 require File.expand_path("../../lib/tainted_hash", __FILE__)
 require 'test/unit'
 
+TaintedHash.send :include, TaintedHash::RailsMethods
+
 class TaintedHashTest < Test::Unit::TestCase
   def setup
     @hash = {'a' => 1, 'b' => 2, 'c' => {'name' => 'bob'}}
