@@ -135,5 +135,12 @@ class TaintedHashTest < Test::Unit::TestCase
     @tainted.approve :a
     assert_equal({'a' => 1}, @tainted.to_hash)
   end
+
+  def test_works_with_integer_keys
+    hash = {'a' => 1, 1 => :a}
+    tainted = TaintedHash.new hash
+    assert_equal 1, tainted[:a]
+    assert_equal :a, tainted[1]
+  end
 end
 

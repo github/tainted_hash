@@ -14,7 +14,12 @@ class TaintedHash < Hash
   #
   # hash - Optional Hash used internally.
   def initialize(hash = nil, approved = nil, available = nil, new_class = nil)
-    @hash = hash || {}
+    (@hash = hash || {}).keys.each do |key|
+      key_s = key.to_s
+      next if key_s == key
+      @hash[key_s] = @hash.delete(key)
+    end
+
     @available = available || Set.new(@hash.keys.map { |k| k.to_s })
     @approved = approved ? approved.intersection(@available) : Set.new
     @new_class = new_class || Hash
