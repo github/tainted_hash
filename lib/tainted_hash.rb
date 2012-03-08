@@ -34,6 +34,14 @@ class TaintedHash < Hash
     @exposed_nothing = @exposed.size.zero?
   end
 
+  # Create a duplicate of this object.
+  #
+  # exposed   - Optional Set of the exposed keys.  Defaults to the Set of this
+  #             TaintedHash.
+  # available - Optional Set of the available keys.  Defaults to the Set of
+  #             this TaintedHash.
+  #
+  # Returns a new TaintedHash.
   def dup(exposed = nil, available = nil)
     self.class.new(@hash.dup, exposed || @exposed, available || @available, @new_class)
   end
