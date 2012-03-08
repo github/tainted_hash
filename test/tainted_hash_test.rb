@@ -19,10 +19,10 @@ class TaintedHashTest < Test::Unit::TestCase
     assert @hash.include?('c')
   end
 
-  def test_approve_keys
+  def test_expose_keys
     assert !@tainted.include?(:a)
     assert_equal [], @tainted.keys
-    @tainted.approve :a
+    @tainted.expose :a
     assert @tainted.include?(:a)
     assert_equal %w(a), @tainted.keys
   end
@@ -86,7 +86,7 @@ class TaintedHashTest < Test::Unit::TestCase
     hash = {'desc' => 'abc', 'files' => {'abc.txt' => 'abc'}}
     tainted = TaintedHash.new hash
 
-    tainted.approve :desc, :files
+    tainted.expose :desc, :files
     assert tainted.include?(:desc)
     assert tainted.include?(:files)
 
@@ -94,7 +94,7 @@ class TaintedHashTest < Test::Unit::TestCase
     assert slice.include?(:desc)
     assert !slice.include?(:files)
     assert_equal %w(desc), slice.keys
-    slice[:contents] = tainted[:files].approve_all
+    slice[:contents] = tainted[:files].expose_all
     assert slice[:contents].include?('abc.txt')
     assert_equal 'abc', slice[:contents]['abc.txt']
   end
@@ -109,15 +109,15 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal 1, @tainted[:d]
   end
 
-  def test_does_not_approve_missing_keys
+  def test_does_not_expose_missing_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
-    @tainted.approve :a, :d
+    @tainted.expose :a, :d
     assert @tainted.include?(:a)
     assert !@tainted.include?(:d)
   end
 
-  def test_values_at_approves_keys
+  def test_values_at_exposes_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:b)
     assert !@tainted.include?(:d)
@@ -127,14 +127,14 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:d)
   end
 
-  def test_requires_something_to_be_approved
+  def test_requires_something_to_be_exposed
     assert_raises RuntimeError do
       @tainted.to_hash
     end
 
-    @tainted.approve :missing
+    @tainted.expose :missing
     assert_equal({}, @tainted.to_hash)
-    @tainted.approve :a
+    @tainted.expose :a
     assert_equal({'a' => 1}, @tainted.to_hash)
   end
 
