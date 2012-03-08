@@ -144,5 +144,10 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal 1, tainted[:a]
     assert_equal :a, tainted[1]
   end
+
+  def test_slice_doesnt_include_missing_keys
+    slice = @tainted.slice :a, :d
+    assert_equal({'a' => 1}, slice.to_hash)
+  end
 end
 

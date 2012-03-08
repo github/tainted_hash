@@ -189,7 +189,7 @@ class TaintedHash < Hash
     #
     # Returns a Hash of the requested keys and values.
     def slice(*keys)
-      str_keys = keys.map { |k| k.to_s }
+      str_keys = @available.intersection(keys.map { |k| k.to_s })
       approve *str_keys
       hash = self.class.new
       str_keys.each do |key|
