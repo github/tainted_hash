@@ -3,6 +3,14 @@ require 'set'
 class TaintedHash < Hash
   VERSION = "0.0.1"
 
+  def self.on_no_expose(&block)
+    @on_no_expose = block
+  end
+
+  def self.trigger_no_expose(hash)
+    @on_no_expose.call hash if @on_no_expose && (!block_given? || yield)
+  end
+
   # Public: Gets the original hash that is being wrapped.
   #
   # Returns a Hash.
@@ -50,7 +58,11 @@ class TaintedHash < Hash
     @exposed_nothing = false
     self
   end
-  
+
+  def extra_keys
+    @available - @exposed
+  end
+
   # Public: Fetches the value in the hash at key, or a sensible default.
   #
   # key     - A String key to retrieve.
@@ -142,7 +154,7 @@ class TaintedHash < Hash
   #
   # Returns nothing.
   def each
-    raise "Nothing is expose" if @exposed_nothing && @available.size > 0
+    self.class.trigger_no_expose(self) { @exposed_nothing && @available.size > 0 }
     @exposed.each do |key|
       yield key, @hash[key]
     end

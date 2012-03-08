@@ -2,6 +2,9 @@ require File.expand_path("../../lib/tainted_hash", __FILE__)
 require 'test/unit'
 
 TaintedHash.send :include, TaintedHash::RailsMethods
+TaintedHash.on_no_expose do |hash|
+  raise
+end
 
 class TaintedHashTest < Test::Unit::TestCase
   def setup
@@ -143,6 +146,11 @@ class TaintedHashTest < Test::Unit::TestCase
     tainted = TaintedHash.new hash
     assert_equal 1, tainted[:a]
     assert_equal :a, tainted[1]
+  end
+
+  def test_gets_extra_keys
+    assert_equal %w(a b c), @tainted.extra_keys.sort
+    assert_equal %w(b c), @tainted.expose(:a).extra_keys.sort
   end
 
   def test_slice_doesnt_include_missing_keys
