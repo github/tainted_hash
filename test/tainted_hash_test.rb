@@ -87,8 +87,7 @@ class TaintedHashTest < Test::Unit::TestCase
       when 'a' then assert_equal(1, value)
       when 'c'
         assert_equal({"name" => "bob"}, value)
-        assert_kind_of Hash, value
-        assert_not_kind_of TaintedHash, value
+        assert_kind_of TaintedHash, value
       end
     end
   end
