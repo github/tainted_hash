@@ -9,7 +9,7 @@ Because of this specific use case, it is assumed all keys are strings.
 By default, no keys have been approved.
 
 ```ruby
-hash = {'a' => 1, 'b' => 2', 'c' => 3}
+hash = {'a' => 1, 'b' => 2, 'c' => 3}
 tainted = TaintedHash.new hash
 ```
 
