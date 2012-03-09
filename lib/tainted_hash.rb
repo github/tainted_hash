@@ -14,7 +14,7 @@ class TaintedHash < Hash
   # Public: Gets the original hash that is being wrapped.
   #
   # Returns a Hash.
-  attr_reader :hash
+  attr_reader :original_hash
 
   # A Tainted Hash only exposes expected keys.  You can either expose them
   # manually, or through common Hash methods like #values_at or #slice.  Once
@@ -24,10 +24,10 @@ class TaintedHash < Hash
   # new_class - Optional class used to create basic Hashes.  Default: Hash.
   #
   def initialize(hash = nil, new_class = nil)
-    (@hash = hash || {}).keys.each do |key|
+    (@original_hash = hash || {}).keys.each do |key|
       key_s = key.to_s
       next if key_s == key
-      @hash[key_s] = @hash.delete(key)
+      @original_hash[key_s] = @original_hash.delete(key)
     end
 
     @new_class = new_class || Hash
@@ -41,7 +41,7 @@ class TaintedHash < Hash
   #
   # Returns a new TaintedHash.
   def dup
-    self.class.new(@hash.dup, @new_class)
+    self.class.new(@original_hash.dup, @new_class)
   end
 
   # Public: Exposes one or more keys for the hash.
@@ -53,7 +53,7 @@ class TaintedHash < Hash
     @exposed_nothing = false
     keys.each do |key|
       key_s = key.to_s
-      self[key_s] = @hash[key_s] if @hash.key?(key_s)
+      self[key_s] = @original_hash[key_s] if @original_hash.key?(key_s)
     end
     self
   end
@@ -63,7 +63,7 @@ class TaintedHash < Hash
   # Returns this TaintedHash.
   def expose_all
     @exposed_nothing = false
-    @hash.each do |key, value|
+    @original_hash.each do |key, value|
       self[key] = value
     end
     self
@@ -73,7 +73,7 @@ class TaintedHash < Hash
   #
   # Returns an Array of String keys.
   def extra_keys
-    @hash.keys - self.keys
+    @original_hash.keys - self.keys
   end
 
   # Public: Fetches the value in the hash at key, or a sensible default.
@@ -84,8 +84,8 @@ class TaintedHash < Hash
   # Returns the value of the key, or the default.
   def fetch(key, default = nil)
     key_s = key.to_s
-    if @hash.key?(key_s)
-      self[key_s] = @hash[key_s]
+    if @original_hash.key?(key_s)
+      self[key_s] = @original_hash[key_s]
     else
       default
     end
@@ -98,12 +98,12 @@ class TaintedHash < Hash
   # Returns the value of at the key in Hash.
   def [](key)
     key_s = key.to_s
-    return if !@hash.key?(key_s)
+    return if !@original_hash.key?(key_s)
 
-    case value = @hash[key_s]
+    case value = @original_hash[key_s]
     when TaintedHash then value
     when Hash
-      value = @hash[key_s] = self.class.new(value, @new_class)
+      value = @original_hash[key_s] = self.class.new(value, @new_class)
     else value
     end
     self[key_s] = value
@@ -118,7 +118,7 @@ class TaintedHash < Hash
   # Returns nothing
   def []=(key, value)
     key_s = key.to_s
-    super(key_s, @hash[key_s] = case value
+    super(key_s, @original_hash[key_s] = case value
       when TaintedHash then value
       when Hash then self.class.new(value, @new_class)
       else value
@@ -133,7 +133,7 @@ class TaintedHash < Hash
   def delete(key)
     key_s = key.to_s
     super(key_s)
-    @hash.delete key_s
+    @original_hash.delete key_s
   end
 
   # Public: Checks whether the given key has been exposed or not.
@@ -176,7 +176,7 @@ class TaintedHash < Hash
   def update(hash)
     hash.each do |key, value|
       key_s = key.to_s
-      @hash[key_s] = self[key_s] = value
+      @original_hash[key_s] = self[key_s] = value
     end
     self
   end
@@ -209,7 +209,7 @@ class TaintedHash < Hash
   end
 
   def inspect
-    %(#<#{self.class}:#{object_id} @hash=#{@hash.inspect} @exposed=#{keys.inspect}>)
+    %(#<#{self.class}:#{object_id} @hash=#{@original_hash.inspect} @exposed=#{keys.inspect}>)
   end
 
   module RailsMethods
@@ -223,7 +223,7 @@ class TaintedHash < Hash
     #
     # Returns a Hash of the requested keys and values.
     def slice(*keys)
-      str_keys = @hash.keys & keys.map { |k| k.to_s }
+      str_keys = @original_hash.keys & keys.map { |k| k.to_s }
       hash = self.class.new
       str_keys.each do |key|
         hash[key] = self[key]
@@ -240,7 +240,7 @@ class TaintedHash < Hash
     end
 
     def to_query
-      @hash.to_query
+      @original_hash.to_query
     end
   end
 end
