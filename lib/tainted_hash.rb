@@ -3,6 +3,16 @@ require 'set'
 class TaintedHash < Hash
   VERSION = "0.0.1"
 
+  class UnexposedError < StandardError
+    # Builds an exception when a TaintedHash has some unexposed keys.  Useful
+    # for testing and production notification of weird parameters.
+    def initialize(action, extras)
+      @action = action
+      @extras = extras
+      super("Extra params for #{@action} in tainted hash: #{@extras.inspect}")
+    end
+  end
+
   def self.on_no_expose(&block)
     @on_no_expose = block
   end
