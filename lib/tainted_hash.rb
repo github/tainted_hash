@@ -34,16 +34,6 @@ class TaintedHash < Hash
     @exposed_nothing = true
   end
 
-  # Create a duplicate of this object.
-  #
-  # exposed   - Optional Set of the exposed keys.  Defaults to the Set of this
-  #             TaintedHash.
-  #
-  # Returns a new TaintedHash.
-  def dup
-    self.class.new(@original_hash.dup, @new_class)
-  end
-
   # Public: Exposes one or more keys for the hash.
   #
   # *keys - One or more String keys.

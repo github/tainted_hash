@@ -22,6 +22,14 @@ class TaintedHashTest < Test::Unit::TestCase
     assert @hash.include?('c')
   end
 
+  def test_dup
+    @tainted[:c].expose :name
+    @tainted.expose :a
+    dup = @tainted.dup.expose :b
+    assert_equal %w(a c), @tainted.keys.sort
+    assert_equal %w(a b c), dup.keys.sort
+  end
+
   def test_expose_keys
     assert !@tainted.include?(:a)
     assert_equal [], @tainted.keys
