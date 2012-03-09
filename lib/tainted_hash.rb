@@ -84,11 +84,7 @@ class TaintedHash < Hash
   # Returns the value of the key, or the default.
   def fetch(key, default = nil)
     key_s = key.to_s
-    if @original_hash.key?(key_s)
-      self[key_s] = @original_hash[key_s]
-    else
-      default
-    end
+    @original_hash.fetch key_s, default
   end
 
   # Public: Gets the value for the key, and exposes the key for the Hash.
@@ -106,8 +102,6 @@ class TaintedHash < Hash
       value = @original_hash[key_s] = self.class.new(value, @new_class)
     else value
     end
-    self[key_s] = value
-    value
   end
 
   # Public: Attempts to set the key of a frozen hash.
@@ -153,9 +147,7 @@ class TaintedHash < Hash
   #
   # Returns an Array of the values (or nil if there is no value) for the keys.
   def values_at(*keys)
-    str_keys = keys.map { |k| k.to_s }
-    expose *str_keys
-    super(*str_keys)
+    @original_hash.values_at *keys.map { |k| k.to_s }
   end
 
   # Public: Merges the given hash with the internal and a dup of the current
@@ -175,8 +167,7 @@ class TaintedHash < Hash
   # Returns this TaintedHash.
   def update(hash)
     hash.each do |key, value|
-      key_s = key.to_s
-      @original_hash[key_s] = self[key_s] = value
+      @original_hash[key.to_s] = value
     end
     self
   end
@@ -226,7 +217,7 @@ class TaintedHash < Hash
       str_keys = @original_hash.keys & keys.map { |k| k.to_s }
       hash = self.class.new
       str_keys.each do |key|
-        hash[key] = self[key]
+        hash[key] = @original_hash[key]
       end
       hash
     end

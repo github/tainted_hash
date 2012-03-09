@@ -15,26 +15,16 @@ tainted = TaintedHash.new hash
 
 You can access keys manually to get the value and approve them:
 
+Use `#expose` to expose keys.
+
 ```ruby
 tainted.include?(:a) # false
 tainted['a'] # Returns 2
 tainted[:a]  # Symbols are OK too.
+tainted.include?(:a) # false, not exposed
+tainted.expose :a
 tainted.include?(:a) # true
 tainted.keys # ['a']
-
-tainted.fetch(:b) # Returns 2
-tainted.include?(:b) # true
-tainted.keys # ['a', 'b']
-
-tainted.values_at(:b, :c) # Returns [2, 3]
-tainted.include?(:c) # true
-tainted.keys # ['a', 'b', 'c']
-```
-
-You can also explicitly expose keys:
-
-```ruby
-tainted.expose :a, :b
 ```
 
 If using Rails 2.3, require `tainted_hash/rails` to setup the necessary hooks.

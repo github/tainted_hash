@@ -26,8 +26,8 @@ class TaintedHashTest < Test::Unit::TestCase
     @tainted[:c].expose :name
     @tainted.expose :a
     dup = @tainted.dup.expose :b
-    assert_equal %w(a c), @tainted.keys.sort
-    assert_equal %w(a b c), dup.keys.sort
+    assert_equal %w(a), @tainted.keys.sort
+    assert_equal %w(a b), dup.keys.sort
   end
 
   def test_expose_keys
@@ -43,14 +43,14 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:d)
     assert_equal 1, @tainted.fetch(:a, :default)
     assert_equal :default, @tainted.fetch(:d, :default)
-    assert @tainted.include?(:a)
+    assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
   end
 
   def test_getting_a_value
     assert !@tainted.include?(:a)
     assert_equal 1, @tainted[:a]
-    assert @tainted.include?(:a)
+    assert !@tainted.include?(:a)
   end
 
   def test_setting_a_value
@@ -62,7 +62,7 @@ class TaintedHashTest < Test::Unit::TestCase
 
   def test_deleting_a_value
     assert_equal 1, @tainted[:a]
-    assert @tainted.include?(:a)
+    assert !@tainted.include?(:a)
     assert_equal 1, @tainted.delete(:a)
     assert !@tainted.include?(:a)
   end
@@ -75,9 +75,13 @@ class TaintedHashTest < Test::Unit::TestCase
     output = @tainted.slice(:a, :b)
     assert_equal({'a' => 1, 'b' => 2}, output.to_hash)
 
-    assert @tainted.include?(:a)
-    assert @tainted.include?(:b)
+    assert !@tainted.include?(:a)
+    assert !@tainted.include?(:b)
     assert !@tainted.include?(:c)
+
+    assert output.include?(:a)
+    assert output.include?(:b)
+    assert !output.include?(:c)
   end
 
   def test_yields_real_values
@@ -102,7 +106,7 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal 2, slice[:b]
     assert_equal 'bob', slice[:c][:name]
     assert_equal %w(b c), slice.keys.sort
-    assert_equal %w(name), slice[:c].keys
+    assert_equal [], slice[:c].keys
   end
 
   def test_slicing_and_building_hashes
@@ -126,8 +130,8 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
     @tainted.update :a => 2, :d => 1
-    assert @tainted.include?(:a)
-    assert @tainted.include?(:d)
+    assert !@tainted.include?(:a)
+    assert !@tainted.include?(:d)
     assert_equal 2, @tainted[:a]
     assert_equal 1, @tainted[:d]
   end
@@ -140,13 +144,13 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:d)
   end
 
-  def test_values_at_exposes_keys
+  def test_values_at_doesnt_expose_keys
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:b)
     assert !@tainted.include?(:d)
     assert_equal [1,2, nil], @tainted.values_at(:a, :b, :d)
-    assert @tainted.include?(:a)
-    assert @tainted.include?(:b)
+    assert !@tainted.include?(:a)
+    assert !@tainted.include?(:b)
     assert !@tainted.include?(:d)
   end
 
