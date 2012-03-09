@@ -20,55 +20,60 @@ class TaintedHash < Hash
   # manually, or through common Hash methods like #values_at or #slice.  Once
   # created, the internal Hash is frozen from future updates.
   #
-  # hash - Optional Hash used internally.
-  def initialize(hash = nil, exposed = nil, available = nil, new_class = nil)
+  # hash      - Optional Hash used internally.
+  # new_class - Optional class used to create basic Hashes.  Default: Hash.
+  #
+  def initialize(hash = nil, new_class = nil)
     (@hash = hash || {}).keys.each do |key|
       key_s = key.to_s
       next if key_s == key
       @hash[key_s] = @hash.delete(key)
     end
 
-    @available = available || Set.new(@hash.keys.map { |k| k.to_s })
-    @exposed = exposed ? exposed.intersection(@available) : Set.new
     @new_class = new_class || Hash
-    @exposed_nothing = @exposed.size.zero?
+    @exposed_nothing = true
   end
 
   # Create a duplicate of this object.
   #
   # exposed   - Optional Set of the exposed keys.  Defaults to the Set of this
   #             TaintedHash.
-  # available - Optional Set of the available keys.  Defaults to the Set of
-  #             this TaintedHash.
   #
   # Returns a new TaintedHash.
-  def dup(exposed = nil, available = nil)
-    self.class.new(@hash.dup, exposed || @exposed, available || @available, @new_class)
+  def dup
+    self.class.new(@hash.dup, @new_class)
   end
 
   # Public: Exposes one or more keys for the hash.
   #
   # *keys - One or more String keys.
   #
-  # Returns nothing.
+  # Returns this TaintedHash.
   def expose(*keys)
     @exposed_nothing = false
     keys.each do |key|
       key_s = key.to_s
-      @exposed << key_s if @available.include?(key_s)
-      key_s
+      self[key_s] = @hash[key_s] if @hash.key?(key_s)
     end
     self
   end
 
+  # Public: Exposes every key of the hash.
+  #
+  # Returns this TaintedHash.
   def expose_all
-    @exposed = @available
     @exposed_nothing = false
+    @hash.each do |key, value|
+      self[key] = value
+    end
     self
   end
 
+  # Public: Gets the unexposed keys from the original Hash.
+  #
+  # Returns an Array of String keys.
   def extra_keys
-    @available - @exposed
+    @hash.keys - self.keys
   end
 
   # Public: Fetches the value in the hash at key, or a sensible default.
@@ -78,8 +83,12 @@ class TaintedHash < Hash
   #
   # Returns the value of the key, or the default.
   def fetch(key, default = nil)
-    expose key
-    @hash.fetch key.to_s, default
+    key_s = key.to_s
+    if @hash.key?(key_s)
+      self[key_s] = @hash[key_s]
+    else
+      default
+    end
   end
 
   # Public: Gets the value for the key, and exposes the key for the Hash.
@@ -88,13 +97,17 @@ class TaintedHash < Hash
   #
   # Returns the value of at the key in Hash.
   def [](key)
-    expose key
-    case value = @hash[key.to_s]
+    key_s = key.to_s
+    return if !@hash.key?(key_s)
+
+    case value = @hash[key_s]
     when TaintedHash then value
     when Hash
-      @hash[key.to_s] = self.class.new(value, nil, nil, @new_class)
+      value = @hash[key_s] = self.class.new(value, @new_class)
     else value
     end
+    self[key_s] = value
+    value
   end
 
   # Public: Attempts to set the key of a frozen hash.
@@ -105,19 +118,21 @@ class TaintedHash < Hash
   # Returns nothing
   def []=(key, value)
     key_s = key.to_s
-    @available << key_s
-    expose key_s
-    @hash[key_s] = case value
-    when TaintedHash then value
-    when Hash then self.class.new(value, nil, nil, @new_class)
-    else value
-    end
+    super(key_s, @hash[key_s] = case value
+      when TaintedHash then value
+      when Hash then self.class.new(value, @new_class)
+      else value
+      end)
   end
 
+  # Public: Deletes the value from both the internal and current Hash.
+  #
+  # key - A String key to delete.
+  #
+  # Returns the value from the key.
   def delete(key)
     key_s = key.to_s
-    @exposed.delete key_s
-    @available.delete key_s
+    super(key_s)
     @hash.delete key_s
   end
 
@@ -127,7 +142,7 @@ class TaintedHash < Hash
   #
   # Returns true if exposed, or false.
   def include?(key)
-    @exposed.include? key.to_s
+    super(key.to_s)
   end
 
   alias key? include?
@@ -140,16 +155,28 @@ class TaintedHash < Hash
   def values_at(*keys)
     str_keys = keys.map { |k| k.to_s }
     expose *str_keys
-    @hash.values_at *str_keys
+    super(*str_keys)
   end
 
+  # Public: Merges the given hash with the internal and a dup of the current
+  # Hash.
+  #
+  # hash - A Hash with String keys.
+  #
+  # Returns a dup of this TaintedHash.
   def merge(hash)
     dup.update(hash)
   end
 
+  # Public: Updates the internal and current Hash with the given Hash.
+  #
+  # hash - A Hash with String keys.
+  #
+  # Returns this TaintedHash.
   def update(hash)
     hash.each do |key, value|
-      self[key] = value
+      key_s = key.to_s
+      @hash[key_s] = self[key_s] = value
     end
     self
   end
@@ -162,15 +189,17 @@ class TaintedHash < Hash
   #
   # Returns nothing.
   def each
-    self.class.trigger_no_expose(self) { @exposed_nothing && @available.size > 0 }
-    @exposed.each do |key|
-      yield key, @hash[key]
-    end
+    self.class.trigger_no_expose(self) { @exposed_nothing && size.zero? }
+    block = block_given? ? Proc.new : nil
+    super(&block)
   end
 
+  # Public: Builds a normal Hash of the exposed values from this hash.
+  #
+  # Returns a Hash.
   def to_hash
     hash = @new_class.new
-    each do |key, value| 
+    each do |key, value|
       hash[key] = case value
         when TaintedHash then value.to_hash
         else value
@@ -179,23 +208,8 @@ class TaintedHash < Hash
     hash
   end
 
-  def to_a
-    to_hash.to_a
-  end
-
-  def values
-    keys.map { |k| self[k] }
-  end
-
-  # Public: Returns a list of the currently exposed keys.
-  #
-  # Returns an Array of String keys.
-  def keys
-    @exposed.to_a
-  end
-
   def inspect
-    %(#<#{self.class}:#{object_id} @hash=#{@hash.inspect} @exposed=#{@exposed.to_a.inspect}>)
+    %(#<#{self.class}:#{object_id} @hash=#{@hash.inspect} @exposed=#{keys.inspect}>)
   end
 
   module RailsMethods
@@ -209,8 +223,7 @@ class TaintedHash < Hash
     #
     # Returns a Hash of the requested keys and values.
     def slice(*keys)
-      str_keys = @available.intersection(keys.map { |k| k.to_s })
-      expose *str_keys
+      str_keys = @hash.keys & keys.map { |k| k.to_s }
       hash = self.class.new
       str_keys.each do |key|
         hash[key] = self[key]
@@ -226,17 +239,9 @@ class TaintedHash < Hash
       self
     end
 
-    def blank?
-      @exposed.blank?
-    end
-
-    def present?
-      @exposed.present?
-    end
-
     def to_query
       @hash.to_query
     end
   end
 end
-  
+
