@@ -72,6 +72,19 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:c)
   end
 
+  def test_yields_real_values
+    @tainted[:c].expose_all
+    @tainted.expose(:a).each do |key, value|
+      case key
+      when 'a' then assert_equal(1, value)
+      when 'c'
+        assert_equal({"name" => "bob"}, value)
+        assert_kind_of Hash, value
+        assert_not_kind_of TaintedHash, value
+      end
+    end
+  end
+
   def test_nested_hash_has_tainted_hashes
     assert_kind_of TaintedHash, @tainted[:c]
     assert_equal 'bob', @tainted[:c][:name]

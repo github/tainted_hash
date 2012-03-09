@@ -191,7 +191,12 @@ class TaintedHash < Hash
   def each
     self.class.trigger_no_expose(self) { @exposed_nothing && size.zero? }
     block = block_given? ? Proc.new : nil
-    super(&block)
+    super do |key, value|
+      yield key, case value
+        when TaintedHash then value.to_hash
+        else value
+        end
+    end
   end
 
   # Public: Builds a normal Hash of the exposed values from this hash.
@@ -200,10 +205,7 @@ class TaintedHash < Hash
   def to_hash
     hash = @new_class.new
     each do |key, value|
-      hash[key] = case value
-        when TaintedHash then value.to_hash
-        else value
-        end
+      hash[key] = value
     end
     hash
   end
