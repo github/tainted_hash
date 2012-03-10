@@ -19,7 +19,7 @@ Use `#expose` to expose keys.
 
 ```ruby
 tainted.include?(:a) # false
-tainted['a'] # Returns 2
+tainted['a'] # Returns 1
 tainted[:a]  # Symbols are OK too.
 tainted.include?(:a) # false, not exposed
 tainted.expose :a
