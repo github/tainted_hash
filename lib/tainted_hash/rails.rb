@@ -4,7 +4,7 @@ TaintedHash.send :include, TaintedHash::RailsMethods
 
 module TaintedHash::Controller
   def wrap_params_with_tainted_hash
-    @_params = TaintedHash.new(@_params.to_hash)
+    @_params = TaintedHash.new(params.to_hash)
   end
 end
 
