@@ -40,8 +40,7 @@ class TaintedHash < Hash
   # new_class - Optional class used to create basic Hashes.  Default: Hash.
   #
   def initialize(hash = nil, new_class = nil)
-    @new_class = new_class || self.class.default_hash_class
-
+    @new_class = new_class || (hash && hash.class) || self.class.default_hash_class
     (@original_hash = hash || @new_class.new).keys.each do |key|
       key_s = key.to_s
       next if key_s == key
