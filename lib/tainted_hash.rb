@@ -13,6 +13,12 @@ class TaintedHash < Hash
     end
   end
 
+  class << self
+    attr_accessor :default_hash_class
+  end
+
+  self.default_hash_class = Hash
+
   def self.on_no_expose(&block)
     @on_no_expose = block
   end
@@ -34,13 +40,14 @@ class TaintedHash < Hash
   # new_class - Optional class used to create basic Hashes.  Default: Hash.
   #
   def initialize(hash = nil, new_class = nil)
-    (@original_hash = hash || {}).keys.each do |key|
+    @new_class = new_class || self.class.default_hash_class
+
+    (@original_hash = hash || @new_class.new).keys.each do |key|
       key_s = key.to_s
       next if key_s == key
       @original_hash[key_s] = @original_hash.delete(key)
     end
 
-    @new_class = new_class || Hash
     @exposed_nothing = true
   end
 
@@ -235,4 +242,3 @@ class TaintedHash < Hash
     end
   end
 end
-
