@@ -1,7 +1,7 @@
 require 'set'
 
 class TaintedHash < Hash
-  VERSION = "0.0.1"
+  VERSION = "0.0.2"
 
   class UnexposedError < StandardError
     # Builds an exception when a TaintedHash has some unexposed keys.  Useful
