@@ -41,13 +41,14 @@ class TaintedHash < Hash
   #
   def initialize(hash = nil, new_class = nil)
     @new_class = new_class || (hash && hash.class) || self.class.default_hash_class
-    (@original_hash = hash || @new_class.new).keys.each do |key|
+    @original_hash = hash || @new_class.new
+    @exposed_nothing = true
+
+    @original_hash.keys.each do |key|
       key_s = key.to_s
       next if key_s == key
       @original_hash[key_s] = @original_hash.delete(key)
     end
-
-    @exposed_nothing = true
   end
 
   # Public: Exposes one or more keys for the hash.
@@ -102,12 +103,7 @@ class TaintedHash < Hash
     key_s = key.to_s
     return if !@original_hash.key?(key_s)
 
-    case value = @original_hash[key_s]
-    when TaintedHash then value
-    when Hash
-      value = @original_hash[key_s] = self.class.new(value, @new_class)
-    else value
-    end
+    get_original_hash_value(key_s)
   end
 
   # Public: Attempts to set the key of a frozen hash.
@@ -118,11 +114,7 @@ class TaintedHash < Hash
   # Returns nothing
   def []=(key, value)
     key_s = key.to_s
-    super(key_s, @original_hash[key_s] = case value
-      when TaintedHash then value
-      when Hash then self.class.new(value, @new_class)
-      else value
-      end)
+    super(key_s, set_original_hash_value(key_s, value))
   end
 
   # Public: Deletes the value from both the internal and current Hash.
@@ -205,8 +197,25 @@ class TaintedHash < Hash
     hash
   end
 
+  def with_indifferent_access
+    self
+  end
+
   def inspect
     %(#<#{self.class}:#{object_id} @hash=#{@original_hash.inspect} @exposed=#{keys.inspect}>)
+  end
+
+private
+  def get_original_hash_value(key_s)
+    set_original_hash_value(key_s, @original_hash[key_s])
+  end
+
+  def set_original_hash_value(key_s, value)
+    if value.is_a?(Hash) && !value.is_a?(TaintedHash)
+      value = self.class.new(value, @new_class)
+    end
+
+    @original_hash[key_s] = value
   end
 
   module RailsMethods

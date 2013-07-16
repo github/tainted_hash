@@ -11,7 +11,3 @@ end
 if defined?(ActionController::Base)
   ActionController::Base.send :include, TaintedHash::Controller
 end
-
-if defined?(HashWithIndifferentAccess)
-  TaintedHash.default_hash_class = HashWithIndifferentAccess
-end

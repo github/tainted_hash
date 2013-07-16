@@ -12,6 +12,13 @@ class TaintedHashTest < Test::Unit::TestCase
     @tainted = TaintedHash.new @hash
   end
 
+  def test_accessing_sub_hash_memoized_tainted_hash
+    c = @tainted[:c]
+    assert_kind_of TaintedHash, c
+
+    assert_equal @tainted[:c].object_id, c.object_id
+  end
+
   def test_exposes_no_keys_by_default
     assert !@tainted.include?('a')
     assert !@tainted.include?('b')
@@ -182,4 +189,3 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal({'a' => 1}, slice.to_hash)
   end
 end
-
