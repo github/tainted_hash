@@ -197,6 +197,10 @@ class TaintedHash < Hash
     hash
   end
 
+  def to_s
+    self.inspect
+  end
+
   def with_indifferent_access
     self
   end
