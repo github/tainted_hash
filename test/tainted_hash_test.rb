@@ -188,4 +188,8 @@ class TaintedHashTest < Test::Unit::TestCase
     slice = @tainted.slice :a, :d
     assert_equal({'a' => 1}, slice.to_hash)
   end
+
+  def test_string_representation_shows_internals
+    assert_match /\A#<TaintedHash:.*>\z/, @tainted.to_s
+  end
 end
