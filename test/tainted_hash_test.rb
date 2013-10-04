@@ -29,12 +29,36 @@ class TaintedHashTest < Test::Unit::TestCase
     assert @hash.include?('c')
   end
 
+  def test_merge
+    @tainted.expose(:a)
+    merged = @tainted.merge('d' => 3)
+    assert_equal %w(a), @tainted.keys.sort
+    assert_equal %w(a d), merged.keys.sort
+    assert_equal %w(a b c), @tainted.original_hash.keys.sort
+    assert_equal %w(a b c d), merged.original_hash.keys.sort
+  end
+
   def test_dup
-    @tainted[:c].expose :name
     @tainted.expose :a
-    dup = @tainted.dup.expose :b
+    dup = @tainted.dup
+    dup.expose :b
     assert_equal %w(a), @tainted.keys.sort
     assert_equal %w(a b), dup.keys.sort
+    @tainted[:d] = 3
+    dup[:e] = 4
+    assert_equal %w(a d), @tainted.keys.sort
+    assert_equal %w(a b e), dup.keys.sort
+  end
+
+  def test_expose_all
+    @tainted.expose_all
+    assert_equal %w(a b c), @tainted.keys.sort
+  end
+
+  def test_original_hash
+    assert_equal @hash, @tainted.original_hash
+    assert_equal @hash.merge('d' => 3), @tainted.merge('d' => 3).original_hash
+    assert_equal @hash, @tainted.expose_all.original_hash
   end
 
   def test_expose_keys
@@ -137,8 +161,8 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
     @tainted.update :a => 2, :d => 1
-    assert !@tainted.include?(:a)
-    assert !@tainted.include?(:d)
+    assert @tainted.include?(:a)
+    assert @tainted.include?(:d)
     assert_equal 2, @tainted[:a]
     assert_equal 1, @tainted[:d]
   end
