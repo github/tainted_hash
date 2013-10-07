@@ -1,7 +1,7 @@
 require 'set'
 
 class TaintedHash < Hash
-  VERSION = "0.2.0"
+  VERSION = "0.3.0"
 
   class UnexposedError < StandardError
     # Builds an exception when a TaintedHash has some unexposed keys.  Useful
@@ -30,7 +30,9 @@ class TaintedHash < Hash
   # Public: Gets the original hash that is being wrapped.
   #
   # Returns a Hash.
-  attr_reader :original_hash
+  def original_hash
+    untaint_original_hash(@original_hash)
+  end
 
   # A Tainted Hash only exposes expected keys.  You can either expose them
   # manually, or through common Hash methods like #values_at or #slice.  Once
@@ -41,7 +43,7 @@ class TaintedHash < Hash
   #
   def initialize(hash = nil, new_class = nil)
     @new_class = new_class || (hash && hash.class) || self.class.default_hash_class
-    @original_hash = hash || @new_class.new
+    @original_hash = (hash && hash.dup) || @new_class.new
     @exposed_nothing = true
 
     @original_hash.keys.each do |key|
@@ -91,10 +93,11 @@ class TaintedHash < Hash
   # Returns the value of the key, or the default.
   def fetch(key, default = nil)
     key_s = key.to_s
-    @original_hash.fetch key_s, default
+    return default if !@original_hash.key?(key_s)
+    get_original_hash_value(key_s)
   end
 
-  # Public: Gets the value for the key, and exposes the key for the Hash.
+  # Public: Gets the value for the key but does not expose the key for the Hash.
   #
   # key - A String key to retrieve.
   #
@@ -102,7 +105,6 @@ class TaintedHash < Hash
   def [](key)
     key_s = key.to_s
     return if !@original_hash.key?(key_s)
-
     get_original_hash_value(key_s)
   end
 
@@ -145,7 +147,16 @@ class TaintedHash < Hash
   #
   # Returns an Array of the values (or nil if there is no value) for the keys.
   def values_at(*keys)
-    @original_hash.values_at *keys.map { |k| k.to_s }
+    keys.map { |k| get_original_hash_value(k.to_s) }
+  end
+
+  # Public: Produces a copy of the current Hash with the same set of exposed
+  # keys as the original Hash.
+  #
+  # Returns a dup of this TaintedHash.
+  def dup()
+    dup = super()
+    dup.set_original_hash(@original_hash.dup)
   end
 
   # Public: Merges the given hash with the internal and a dup of the current
@@ -165,7 +176,7 @@ class TaintedHash < Hash
   # Returns this TaintedHash.
   def update(hash)
     hash.each do |key, value|
-      @original_hash[key.to_s] = value
+      self[key.to_s] = value
     end
     self
   end
@@ -205,6 +216,16 @@ class TaintedHash < Hash
     %(#<#{self.class}:#{object_id} @hash=#{@original_hash.inspect} @exposed=#{keys.inspect}>)
   end
 
+protected
+  def set_original_hash(hash)
+    @original_hash = hash
+    self
+  end
+
+  def get_original_hash
+    return @original_hash
+  end
+
 private
   def get_original_hash_value(key_s)
     set_original_hash_value(key_s, @original_hash[key_s])
@@ -216,6 +237,24 @@ private
     end
 
     @original_hash[key_s] = value
+  end
+
+  # Private: Returns a regular Hash, transforming all embedded TaintedHash
+  # objects into regular Hash objects with all keys exposed.
+  #
+  # original_hash - The @original_hash you want to untaint
+  #
+  #
+  # Returns a Hash
+  def untaint_original_hash(original_hash)
+    hash = @new_class.new
+    original_hash.each do |key, value|
+      hash[key] = case value
+        when TaintedHash then untaint_original_hash(value.get_original_hash)
+        else value
+        end
+    end
+    hash
   end
 
   module RailsMethods
