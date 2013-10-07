@@ -154,8 +154,8 @@ class TaintedHash < Hash
   # keys as the original Hash.
   #
   # Returns a dup of this TaintedHash.
-  def dup()
-    dup = super()
+  def dup
+    dup = super
     dup.set_original_hash(@original_hash.dup)
   end
 
