@@ -90,14 +90,16 @@ class TaintedHash < Hash
   #
   # Returns the value of the key, or the default.
   def fetch(key, *default)
+    raise ArgumentError, "wrong number of arguments (#{default.size + 1} for 1..2)" if default.size > 1
+
     key_s = key.to_s
     if @original_hash.key?(key_s)
       self[key_s]
     elsif block_given?
       yield
-    elsif default
+    elsif !default.empty?
       default[0]
-    else
+    elsif
       raise KeyError, "key not found: #{key}"
     end
   end

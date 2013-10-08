@@ -74,6 +74,10 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:d)
     assert_equal 1, @tainted.fetch(:a, :default)
     assert_equal :default, @tainted.fetch(:d, :default)
+    assert_raises KeyError do
+      @tainted.fetch(:d)
+    end
+    assert_equal :default, @tainted.fetch(:d) { :default }
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
   end
