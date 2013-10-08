@@ -99,7 +99,7 @@ class TaintedHash < Hash
       yield
     elsif !default.empty?
       default[0]
-    elsif
+    else
       raise KeyError, "key not found: #{key}"
     end
   end
