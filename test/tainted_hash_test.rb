@@ -212,4 +212,19 @@ class TaintedHashTest < Test::Unit::TestCase
     slice = @tainted.slice :a, :d
     assert_equal({'a' => 1}, slice.to_hash)
   end
+
+  def test_slice_bang_modifies_self
+    @tainted.slice! :a, :d
+    assert_equal({'a' => 1}, @tainted.to_hash)
+  end
+
+  def test_include_aliases
+    assert !@tainted.include?(:a)
+    assert !@tainted.has_key?(:a)
+    assert !@tainted.key?(:a)
+    @tainted[:a] = 2
+    assert @tainted.include?(:a)
+    assert @tainted.has_key?(:a)
+    assert @tainted.key?(:a)
+  end
 end

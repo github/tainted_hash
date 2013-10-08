@@ -1,5 +1,3 @@
-require 'set'
-
 class TaintedHash < Hash
   VERSION = "0.3.0"
 
@@ -91,10 +89,17 @@ class TaintedHash < Hash
   # default - A sensible default.
   #
   # Returns the value of the key, or the default.
-  def fetch(key, default = nil)
+  def fetch(key, *default)
     key_s = key.to_s
-    return default if !@original_hash.key?(key_s)
-    get_original_hash_value(key_s)
+    if @original_hash.key?(key_s)
+      self[key_s]
+    elsif block_given?
+      yield
+    elsif default
+      default[0]
+    else
+      raise KeyError, "key not found: #{key}"
+    end
   end
 
   # Public: Gets the value for the key but does not expose the key for the Hash.
@@ -140,6 +145,7 @@ class TaintedHash < Hash
   end
 
   alias key? include?
+  alias has_key? include?
 
   # Public: Returns the values for the given keys, and exposes the keys.
   #
@@ -147,7 +153,7 @@ class TaintedHash < Hash
   #
   # Returns an Array of the values (or nil if there is no value) for the keys.
   def values_at(*keys)
-    keys.map { |k| get_original_hash_value(k.to_s) }
+    keys.map { |k| self[k] }
   end
 
   # Public: Produces a copy of the current Hash with the same set of exposed
@@ -155,8 +161,9 @@ class TaintedHash < Hash
   #
   # Returns a dup of this TaintedHash.
   def dup
-    dup = super
-    dup.set_original_hash(@original_hash.dup)
+    super.tap do |duplicate|
+      duplicate.instance_variable_set :@original_hash, @original_hash.dup
+    end
   end
 
   # Public: Merges the given hash with the internal and a dup of the current
@@ -216,16 +223,6 @@ class TaintedHash < Hash
     %(#<#{self.class}:#{object_id} @hash=#{@original_hash.inspect} @exposed=#{keys.inspect}>)
   end
 
-protected
-  def set_original_hash(hash)
-    @original_hash = hash
-    self
-  end
-
-  def get_original_hash
-    return @original_hash
-  end
-
 private
   def get_original_hash_value(key_s)
     set_original_hash_value(key_s, @original_hash[key_s])
@@ -250,7 +247,7 @@ private
     hash = @new_class.new
     original_hash.each do |key, value|
       hash[key] = case value
-        when TaintedHash then untaint_original_hash(value.get_original_hash)
+        when TaintedHash then untaint_original_hash(value.instance_variable_get :@original_hash)
         else value
         end
     end
@@ -268,16 +265,16 @@ private
     #
     # Returns a Hash of the requested keys and values.
     def slice(*keys)
-      str_keys = @original_hash.keys & keys.map { |k| k.to_s }
-      hash = self.class.new
-      str_keys.each do |key|
-        hash[key] = @original_hash[key]
+      keys.each_with_object(self.class.new) do |key, hash|
+        key_s = key.to_s
+        hash[key_s] = @original_hash[key_s] if @original_hash.key?(key_s)
       end
-      hash
     end
 
     def slice!(*keys)
-      raise NotImplementedError
+      str_keys = keys.map { |k| k.to_s }
+      (@original_hash.keys - str_keys).each { |key| delete(key) }
+      expose(*str_keys)
     end
 
     def stringify_keys
