@@ -74,6 +74,10 @@ class TaintedHashTest < Test::Unit::TestCase
     assert !@tainted.include?(:d)
     assert_equal 1, @tainted.fetch(:a, :default)
     assert_equal :default, @tainted.fetch(:d, :default)
+    assert_raises KeyError do
+      @tainted.fetch(:d)
+    end
+    assert_equal :default, @tainted.fetch(:d) { :default }
     assert !@tainted.include?(:a)
     assert !@tainted.include?(:d)
   end
@@ -211,5 +215,20 @@ class TaintedHashTest < Test::Unit::TestCase
   def test_slice_doesnt_include_missing_keys
     slice = @tainted.slice :a, :d
     assert_equal({'a' => 1}, slice.to_hash)
+  end
+
+  def test_slice_bang_modifies_self
+    @tainted.slice! :a, :d
+    assert_equal({'a' => 1}, @tainted.to_hash)
+  end
+
+  def test_include_aliases
+    assert !@tainted.include?(:a)
+    assert !@tainted.has_key?(:a)
+    assert !@tainted.key?(:a)
+    @tainted[:a] = 2
+    assert @tainted.include?(:a)
+    assert @tainted.has_key?(:a)
+    assert @tainted.key?(:a)
   end
 end
