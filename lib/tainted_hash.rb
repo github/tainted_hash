@@ -283,8 +283,8 @@ private
       self
     end
 
-    def to_query
-      @original_hash.to_query
+    def to_query(*args)
+      @original_hash.to_query(*args)
     end
   end
 end
