@@ -1,5 +1,5 @@
 class TaintedHash < Hash
-  VERSION = "0.3.0"
+  VERSION = "0.3.1"
 
   class UnexposedError < StandardError
     # Builds an exception when a TaintedHash has some unexposed keys.  Useful
