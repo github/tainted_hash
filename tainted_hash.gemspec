@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   ## the sub! line in the Rakefile
   s.name              = 'tainted_hash'
   s.version           = '0.3.2'
-  s.date              = '2014-02-06'
+  s.date              = '2014-09-18'
   s.rubyforge_project = 'tainted_hash'
 
   ## Make sure your summary is short. The description may be as long
