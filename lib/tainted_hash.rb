@@ -221,6 +221,10 @@ class TaintedHash < Hash
     self
   end
 
+  def nested_under_indifferent_access
+    self
+  end
+
   def inspect
     %(#<#{self.class}:#{object_id} @hash=#{@original_hash.inspect} @exposed=#{keys.inspect}>)
   end
