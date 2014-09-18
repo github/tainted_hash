@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   ## If your rubyforge_project name is different, then edit it and comment out
   ## the sub! line in the Rakefile
   s.name              = 'tainted_hash'
-  s.version           = '0.3.1'
+  s.version           = '0.3.2'
   s.date              = '2014-02-06'
   s.rubyforge_project = 'tainted_hash'
 
