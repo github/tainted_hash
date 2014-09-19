@@ -229,6 +229,12 @@ class TaintedHash < Hash
     %(#<#{self.class}:#{object_id} @hash=#{@original_hash.inspect} @exposed=#{keys.inspect}>)
   end
 
+  def symbolize_keys
+    to_hash.symbolize_keys
+  end
+
+  undef symbolize_keys!
+
 private
   def get_original_hash_value(key_s)
     set_original_hash_value(key_s, @original_hash[key_s])
@@ -259,12 +265,6 @@ private
     end
     hash
   end
-
-  def symbolize_keys
-    to_hash.symbolize_keys
-  end
-
-  undef symbolize_keys!
 
   module RailsMethods
     def self.included(base)
