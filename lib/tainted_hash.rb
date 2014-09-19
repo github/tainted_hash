@@ -260,6 +260,12 @@ private
     hash
   end
 
+  def symbolize_keys
+    to_hash.symbolize_keys
+  end
+
+  undef symbolize_keys!
+
   module RailsMethods
     def self.included(base)
       base.send :alias_method, :stringify_keys!, :stringify_keys
