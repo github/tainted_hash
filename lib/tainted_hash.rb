@@ -29,7 +29,7 @@ class TaintedHash < Hash
   #
   # Returns a Hash.
   def original_hash
-    untaint_original_hash(@original_hash)
+    untaint_object(@original_hash)
   end
 
   # A Tainted Hash only exposes expected keys.  You can either expose them
@@ -241,29 +241,52 @@ private
   end
 
   def set_original_hash_value(key_s, value)
-    if value.is_a?(Hash) && !value.is_a?(TaintedHash)
-      value = self.class.new(value, @new_class)
-    end
-
-    @original_hash[key_s] = value
+    @original_hash[key_s] = taint_object(value)
   end
 
-  # Private: Returns a regular Hash, transforming all embedded TaintedHash
-  # objects into regular Hash objects with all keys exposed.
+  # Private: Returns an object that ensures that all elements directly
+  # accesible from the object will return a TaintedHash instead of a regular
+  # Hash.
   #
-  # original_hash - The @original_hash you want to untaint
+  # object - The object you want to taint
   #
   #
-  # Returns a Hash
-  def untaint_original_hash(original_hash)
-    hash = @new_class.new
-    original_hash.each do |key, value|
-      hash[key] = case value
-        when TaintedHash then untaint_original_hash(value.instance_variable_get :@original_hash)
-        else value
-        end
+  # Returns an object (in practice a TaintedHash, Array, or String)
+  def taint_object(object)
+    case object
+    when TaintedHash
+      object
+    when @new_class, Hash
+      self.class.new(object, @new_class)
+    when Array
+      object.map { |obj| taint_object(obj) }
+    else
+      object
     end
-    hash
+  end
+
+  # Private: Returns an object that recursively turns all TaintedHash objects
+  # into Hash objects, with all keys and values exposed.
+  #
+  # object - The object you want to untaint
+  #
+  #
+  # Returns an object (in practice a Hash, Array, or String)
+  def untaint_object(object)
+    case object
+    when TaintedHash
+      untaint_object(object.original_hash)
+    when @new_class, Hash
+      hash = @new_class.new
+      object.each do |key, value|
+        hash[key] = untaint_object(value)
+      end
+      hash
+    when Array
+      object.map { |o| untaint_object(o) }
+    else
+      object
+    end
   end
 
   module RailsMethods
