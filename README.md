@@ -1,4 +1,4 @@
-# Tainted Hash
+# Tainted Hash [![Build Status](https://travis-ci.org/technoweenie/tainted_hash.png?branch=master)](https://travis-ci.org/technoweenie/tainted_hash)
 
 A TaintedHash is a wrapper around a normal Hash that only exposes the keys that
 have been approved.  This is useful in cases where a Hash is built from user
