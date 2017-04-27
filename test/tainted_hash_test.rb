@@ -61,6 +61,16 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal @hash, @tainted.expose_all.original_hash
   end
 
+  def test_original_hash_with_mixed_nesting_of_hashes_and_arrays
+    hash = {'a' => 1, 'b' => [{'c' => [{'d' => 2, 'e' => 3}]}]}
+    tainted = TaintedHash.new hash
+    # Access a deeply nested value to force the inner Hash to be turned into a TaintedHash
+    assert_kind_of TaintedHash, tainted[:b][0][:c][0]
+    assert_equal hash, tainted.original_hash
+    assert_equal hash.merge('d' => 3), tainted.merge('d' => 3).original_hash
+    assert_equal hash, tainted.expose_all.original_hash
+  end
+
   def test_expose_keys
     assert !@tainted.include?(:a)
     assert_equal [], @tainted.keys
@@ -142,6 +152,15 @@ class TaintedHashTest < Test::Unit::TestCase
     assert_equal 'bob', slice[:c][:name]
     assert_equal %w(b c), slice.keys.sort
     assert_equal [], slice[:c].keys
+  end
+
+  def test_mixed_nesting_of_hashes_and_arrays
+    hash = {'a' => 1, 'b' => [{'c' => [{'d' => 2, 'e' => 3}]}]}
+    tainted = TaintedHash.new hash
+    assert_kind_of TaintedHash, tainted[:b][0][:c][0]
+    assert_equal 2, tainted[:b][0][:c][0][:d]
+    tainted[:b][0][:c][0].expose(:d)
+    assert_equal %w(d), tainted[:b][0][:c][0].keys
   end
 
   def test_slicing_and_building_hashes
