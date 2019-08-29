@@ -197,9 +197,8 @@ class TaintedHash < Hash
   # Yields the String key, and the value.
   #
   # Returns nothing.
-  def each
+  def each(&block)
     self.class.trigger_no_expose(self) { @exposed_nothing && size.zero? }
-    block = block_given? ? Proc.new : nil
     super(&block)
   end
 
